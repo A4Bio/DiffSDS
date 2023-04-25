@@ -86,14 +86,15 @@ class DiffSDS(Base_method):
             self.optimizer.zero_grad()
             loss, angle_loss, len_loss, overlap_loss = self.forward_loss(batch)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
+            self.optimizer.step()
             
             LogAngle(angle_loss.detach().cpu(), 1)
             LogLoss(loss.detach().cpu(), 1)
             LogLen(len_loss.detach().cpu(),1)
             LogOverlap(overlap_loss.detach().cpu(), 1)
             
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
-            self.optimizer.step()
+            
             
             train_pbar.set_description('train loss: {:.4f}'.format(loss.item()))
             
@@ -148,15 +149,14 @@ class DiffSDS(Base_method):
                 "valid_C_1N_1CA": C_1N_1CA,
                 "valid_overlap": valid_overlap}
 
-    def test_one_epoch(self, test_loader, train_loader):
+    def test_one_epoch(self, test_loader):
         self.model.eval()
         step_angle_loss2 = []
         for batch in tqdm(test_loader):
             angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx = cuda([batch["angles"], batch['coords'], batch["attn_mask"], batch["position_ids"], batch["t"], batch["seqs"], batch["unknown_mask"], batch["start_idx"], batch["end_idx"]], device=self.model.device)
-            raw_coords = coords.clone()
-            timestamps = 1000
             
-            pred_angles, step_angle_loss = self.sampling(angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx , train_loader.dataset, mode='colddiff')
+            timestamps = 1000
+            pred_angles, step_angle_loss = self.sampling(angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx,  mode='colddiff')
             step_angle_loss2.extend(step_angle_loss)
             test_all = torch.stack(step_angle_loss)
             
@@ -193,7 +193,7 @@ class DiffSDS(Base_method):
     
 
     
-    def sampling(self, angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx, train_dset, mode):
+    def sampling(self, angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx, mode):
         noise = torch.randn_like(angles).to(self.device)
         noise = utils.modulo_with_wrapped_range(noise, -np.pi, np.pi)
         input = noise*(unknown_mask) + angles*(~unknown_mask)

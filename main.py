@@ -5,7 +5,7 @@ import pickle
 import json
 import torch
 import os.path as osp
-from parser import create_parser
+from params import create_parser
 import datetime
 import json
 import wandb

@@ -1,6 +1,6 @@
 import torch
 import os.path as osp
-from parser import create_parser
+from params import create_parser
 import json
 
 import warnings
@@ -44,13 +44,12 @@ if __name__ == '__main__':
     config['batch_size'] = 1000
     config['strict_test'] = True
     config["sampling"] = True
-    mode = "colddiff"
+    mode = config['mode']
     
     
-    svpath = "/gaozhangyang/experiments/DiffSDS/results/DiffSDS_sampling/"
-    
+    svpath = "/gaozhangyang/experiments/DiffSDS/results/DiffSDS_sampling"
+    check_dir(svpath)
 
-    mask_location = {}
     exp = Exp(args, distributed=False)
     
     params = torch.load('/gaozhangyang/experiments/DiffSDS/model_zoom/DiffSDS/checkpoint.pth', map_location=torch.device('cuda:0'))
@@ -64,10 +63,8 @@ if __name__ == '__main__':
         angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx = cuda([batch["angles"], batch['coords'], batch["attn_mask"], batch["position_ids"], batch["t"], batch["seqs"], batch["unknown_mask"], batch["start_idx"], batch["end_idx"]], device=exp.method.model.device)
         raw_coords = coords.clone()
         timestamps = 1000
-        for idx, key in enumerate(batch['key']):
-            mask_location[key] = (start_idx[idx].item(), end_idx[idx].item())
             
-        angles, step_angle_loss = exp.method.sampling(angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx , exp.train_loader.dataset, mode=mode)
+        angles, step_angle_loss = exp.method.sampling(angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx , mode=mode)
 
         unknown_mask = unknown_mask.squeeze()
         
@@ -76,9 +73,6 @@ if __name__ == '__main__':
         pred_coords = coords*(~unknown_mask[...,None,None])
         pred_coords2 = exp.method.model.pred_coord(pred_coords.clone(), start_idx, end_idx, phi, psi, omega, C_1N_1CA, tau, CA_C_1N)
         
-
-
-
         for i in range(angles.shape[0]):
             if (attn_mask*unknown_mask)[i].sum()>0:                
                 TorchNERFBuilder.sv2pdb(f"{svpath}/pred_{batch['key'][i]}.pdb", pred_coords2.cpu()[i].reshape(-1,3), unknown_mask[i], attn_mask[i])

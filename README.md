@@ -31,7 +31,7 @@
 
 - Sampling:
     ```
-    python sampling_diffsds.py
+    sh sampling.sh
     ```
 
 # Released assets

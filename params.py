@@ -24,7 +24,7 @@ def create_parser():
     parser.add_argument('--sampling', default=False, type=bool)
     
     # method parameters
-    parser.add_argument('--method', default='DiffSDS', choices=['CFoldingDiff', 'DiffSDS', 'FoldingDiff']) # need to change
+    parser.add_argument('--method', default='CFoldingDiff', choices=['CFoldingDiff', 'DiffSDS', 'FoldingDiff']) 
     parser.add_argument('--config_file', '-c', default=None, type=str)
     parser.add_argument('--max_seq_len', default=128, type=int)
     parser.add_argument('--num_heads', default=12, type=int)
@@ -35,12 +35,12 @@ def create_parser():
     parser.add_argument('--dropout_p', default=0.1, type=float)
     parser.add_argument('--timesteps', default=1000, type=int)
     parser.add_argument('--use_grad', default=0, type=int)
-    parser.add_argument('--mode', default="denoise", choices=['colddiff', 'denoise']) # need to change
+    parser.add_argument('--mode', default="denoise", choices=['colddiff', 'denoise']) 
     parser.add_argument("--use_seq", default=True, type=bool)
     parser.add_argument("--strict_test", default=True, type=bool)
 
     # Training parameters
-    parser.add_argument('--epoch', default=10000, type=int, help='end epoch')
+    parser.add_argument('--epoch', default=1, type=int, help='end epoch')
     parser.add_argument('--log_step', default=10, type=int)
     parser.add_argument('--patience', default=10000, type=int)
     parser.add_argument('--search', default=0, type=int)
