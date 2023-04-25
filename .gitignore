@@ -1,0 +1,12 @@
+__pycache__
+/data/cath
+/results
+/mmseqs/*fasta
+/mmseqs/*UP*
+/mmseqs/tmp
+/tmp
+.vscode
+.ipynb_checkpoints
+/pdb_2021aug02_sample
+/wandb
+/model_zoom
