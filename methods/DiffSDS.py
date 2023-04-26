@@ -222,11 +222,14 @@ class DiffSDS(Base_method):
                     mode = mode
                 )
             error = ((angles - input)*unknown_mask).sum(dim=(0,1))/unknown_mask.sum(dim=(0,1))
+            print(error)
             error_list.append(error)
 
             results.append(input)
         results = torch.stack(results)[-1,...]
         error_list = torch.stack(error_list)
+        
+        input = utils.modulo_with_wrapped_range(input, range_min=-torch.pi, range_max=torch.pi)
         
         torch.save({"error_curve": error_list.cpu()}, 
                    "/gaozhangyang/experiments/ProreinBinder/results/error_curve_diffsds.pt")

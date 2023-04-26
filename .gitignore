@@ -10,3 +10,5 @@ __pycache__
 /pdb_2021aug02_sample
 /wandb
 /model_zoom
+/evaluate/*.png
+/evaluate/results/

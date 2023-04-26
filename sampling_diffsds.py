@@ -47,12 +47,12 @@ if __name__ == '__main__':
     mode = config['mode']
     
     
-    svpath = "/gaozhangyang/experiments/DiffSDS/results/DiffSDS_sampling"
+    svpath = "/gaozhangyang/experiments/DiffSDS/results/DiffSDS_sampling_9500"
     check_dir(svpath)
 
     exp = Exp(args, distributed=False)
     
-    params = torch.load('/gaozhangyang/experiments/DiffSDS/model_zoom/DiffSDS/checkpoint.pth', map_location=torch.device('cuda:0'))
+    params = torch.load('/gaozhangyang/experiments/DiffSDS/model_zoom/DiffSDS/9500.pth', map_location=torch.device('cuda:0'))
     new_params = {}
     for key, val in params.items():
         new_params[key.replace("module.", "")] = val
