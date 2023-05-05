@@ -67,7 +67,7 @@ class DiffSDS(Base_method):
         len_loss = torch.sum((true_vectors.norm(dim=-1) - vectors.norm(dim=-1))**2, dim=-1).mean()
         overlap_loss = torch.clamp(torch.exp(-0.8*dist) - np.exp(-0.8*3), 0).mean()
         
-        loss_final = angle_loss_reduced + len_loss*0.0001 + 10*overlap_loss
+        loss_final = angle_loss_reduced + len_loss*0.0001 + 1*overlap_loss
         
         return loss_final, angle_loss, len_loss, overlap_loss
 
@@ -82,7 +82,7 @@ class DiffSDS(Base_method):
         
         self.train_loader = train_loader
         train_pbar = tqdm(train_loader)
-        for batch in train_pbar:
+        for idx, batch in enumerate(train_pbar):
             self.optimizer.zero_grad()
             loss, angle_loss, len_loss, overlap_loss = self.forward_loss(batch)
             loss.backward()
@@ -90,6 +90,7 @@ class DiffSDS(Base_method):
             self.optimizer.step()
             
             LogAngle(angle_loss.detach().cpu(), 1)
+            # print(idx,angle_loss)
             LogLoss(loss.detach().cpu(), 1)
             LogLen(len_loss.detach().cpu(),1)
             LogOverlap(overlap_loss.detach().cpu(), 1)
@@ -222,14 +223,14 @@ class DiffSDS(Base_method):
                     mode = mode
                 )
             error = ((angles - input)*unknown_mask).sum(dim=(0,1))/unknown_mask.sum(dim=(0,1))
-            print(error)
+            # print(error)
             error_list.append(error)
 
             results.append(input)
         results = torch.stack(results)[-1,...]
         error_list = torch.stack(error_list)
         
-        input = utils.modulo_with_wrapped_range(input, range_min=-torch.pi, range_max=torch.pi)
+        # input = utils.modulo_with_wrapped_range(input, range_min=-torch.pi, range_max=torch.pi)
         
         torch.save({"error_curve": error_list.cpu()}, 
                    "/gaozhangyang/experiments/ProreinBinder/results/error_curve_diffsds.pt")

@@ -40,7 +40,8 @@ method_maps = {
 
 # CUDA_VISIBLE_DEVICES="0" python -m torch.distributed.launch --nproc_per_node 1 --master_port 1235 main.py --ex_name ablation/full_feat
 
-# CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7" python -m torch.distributed.launch --nproc_per_node 8 main.py --ex_name dualspace_bacth1024
+# CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7" torchrun --nproc_per_node 8 main.py --ex_name recheck_diffsds_final --method DiffSDS
+
 # CUDA_VISIBLE_DEVICES="0" python -m torch.distributed.launch --nproc_per_node 1 --master_port 1234 main.py --ex_name dualspace_baseline
 # CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7" python -m torch.distributed.launch --nproc_per_node 8 main.py --ex_name DiffSDS_bacth1024_epoch100k
 
@@ -123,13 +124,15 @@ class Exp:
                 valid_metrics = self.valid()
                 
                 print_log('Epoch: {}, Steps: {} | Train Loss: {:.4f}  Valid Loss: {}\n'.format(epoch + 1, len(self.train_loader), train_metrics['train_loss'], valid_metrics['valid_loss']))
+                print_log(valid_metrics)
                 
                 recorder(valid_metrics['valid_loss'], self.method.model, self.path)
                 if recorder.early_stop:
                     print("Early stopping")
                     logging.info("Early stopping")
                     break
-            
+        
+        self._save("final")
         best_model_path = osp.join(self.path, 'checkpoint.pth')
         self.method.model.load_state_dict(torch.load(best_model_path))
 
@@ -139,7 +142,7 @@ class Exp:
         return valid_metrics
 
     def test(self):
-        angle_sum = self.method.test_one_epoch(self.test_loader, self.train_loader)
+        angle_sum = self.method.test_one_epoch(self.test_loader)
         angle_sum = angle_sum.tolist()
         print_log('Test Loss: {} \n'.format(angle_sum))
         return angle_sum
@@ -147,23 +150,23 @@ class Exp:
 
 
 if __name__ == '__main__':
-    # debug: CUDA_VISIBLE_DEVICES="0" python -m debugpy --listen 5698 --wait-for-client -m torch.distributed.launch --nproc_per_node 1 main.py
+    # debug: CUDA_VISIBLE_DEVICES="0" python -m debugpy --listen 5699 --wait-for-client -m torch.distributed.launch --nproc_per_node 1 main.py
     torch.distributed.init_process_group(backend='nccl')
     args = create_parser()
     config = args.__dict__
     default_params = load_config(osp.join('./configs', args.method + '.py' if args.config_file is None else args.config_file))
     config.update(default_params)
-    config['local_rank'] = 0
+    config['local_rank'] = int(os.environ["LOCAL_RANK"])
     config['sampling'] = False
     
     print(config) 
     
-    os.environ["WANDB_DISABLED"] = "true"
+    # os.environ["WANDB_DISABLED"] = "true"
     os.environ["WANDB_API_KEY"] = "ddb1831ecbd2bf95c3323502ae17df6e1df44ec0"
     wandb.init(project="ProteinBinder", entity="gaozhangyang", config=config, name=args.ex_name, group=args.ex_name)
 
-    set_seed(111)
-    exp = Exp(args)
+    set_seed(2023)
+    exp = Exp(args, distributed = True)
     # exp.method.model.load_state_dict(torch.load("/gaozhangyang/experiments/ProreinBinder/inpaint/checkpoint/cfolddiff_baseline/checkpoint.pth"))
     # exp.method.model.load_state_dict(torch.load("/gaozhangyang/experiments/ProreinBinder/results/dualspace_bacth1024/checkpoint.pth", map_location=torch.device('cuda:0')))
     
@@ -177,7 +180,11 @@ if __name__ == '__main__':
     # exp.method.model.load_state_dict(torch.load("/gaozhangyang/experiments/ProreinBinder/results/dualspace_epoch100k_restart_from_bacth1024weighted/checkpoint.pth", map_location=torch.device('cuda:0')))
     
 
-    # exp.method.model.load_state_dict(torch.load("/gaozhangyang/experiments/ProreinBinder/results/CFoldingDiff_rebuttal/checkpoint.pth", map_location='cuda:0'))
+    # params = torch.load('/gaozhangyang/experiments/ProreinBinder/results/DualSpace_bacth1024_epoch100k_offline/checkpoint.pth', map_location=torch.device('cuda:0'))
+    # new_params = {}
+    # for key, val in params.items():
+    #     new_params[key.replace("module.", "")] = val
+    # exp.method.model.load_state_dict(new_params)
     
 
     # exp.method.model.load_state_dict(torch.load(svpath+'checkpoint.pth'))

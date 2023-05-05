@@ -120,6 +120,7 @@ class CathCanonicalAnglesDataset(Dataset):
             remove = split[split["test"]==-1]["domain"].tolist()
             remove = [one.encode() for one in remove]
             self.keys = list(set(self.keys) - set(remove))
+        self.keys = sorted(self.keys)
         
 
     def _close_db(self):

@@ -34,6 +34,14 @@ from utils.angles_and_coords import (
 
 import pandas as pd
 
+def set_seed(seed):
+    import torch.backends.cudnn as cudnn
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 if __name__ == '__main__':
     args = create_parser()
     args.method = 'DiffSDS'
@@ -47,17 +55,19 @@ if __name__ == '__main__':
     mode = config['mode']
     
     
-    svpath = "/gaozhangyang/experiments/DiffSDS/results/DiffSDS_sampling_9500"
+    svpath = "/gaozhangyang/experiments/DiffSDS/results/DiffSDS_sampling"
     check_dir(svpath)
 
+    set_seed(2023)
     exp = Exp(args, distributed=False)
     
-    params = torch.load('/gaozhangyang/experiments/DiffSDS/model_zoom/DiffSDS/9500.pth', map_location=torch.device('cuda:0'))
+    params = torch.load('/gaozhangyang/experiments/ProreinBinder/results/DualSpace_bacth1024_epoch100k_offline/checkpoint.pth', map_location=torch.device('cuda:0'))
     new_params = {}
     for key, val in params.items():
         new_params[key.replace("module.", "")] = val
     exp.method.model.load_state_dict(new_params)
 
+    
     print('>>>>>>>>>>>>>>>>>>>>>>>>>> sampling  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
     for batch in tqdm(exp.test_loader):
         angles, coords, attn_mask, position_ids, timestamps, seqs, unknown_mask, start_idx, end_idx = cuda([batch["angles"], batch['coords'], batch["attn_mask"], batch["position_ids"], batch["t"], batch["seqs"], batch["unknown_mask"], batch["start_idx"], batch["end_idx"]], device=exp.method.model.device)
