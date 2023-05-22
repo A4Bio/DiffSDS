@@ -455,13 +455,22 @@ class DiffSDS_model(BertPreTrainedModel):
             select_mask = (~unknown_mask[:,:,0]* attention_mask*(rel_idx>10))
             dist = dist*select_mask + 10000*(1-select_mask)
             dist = dist.min(dim=1)[0]
-            
         else:
             pred = self.token_decoder(sequence_output)
             phi, psi, omega, tau, CA_C_1N, C_1N_1CA = pred.split(1,dim=-1)
-            coords_pred = self.pred_coord(coords, start_idx, end_idx, phi, psi, omega, tau, CA_C_1N, C_1N_1CA)
+            coords_pred = self.pred_coord(coords, start_idx-1, end_idx+1, phi, psi, omega, tau, CA_C_1N, C_1N_1CA)
             idx = torch.arange(start_idx.shape[0], device=coords.device)
             vectors = coords_pred[idx, end_idx] - coords_pred[idx, start_idx]
+            
+            rand_idx = torch.cat([torch.randint(start_idx[i], end_idx[i],(1,)) for i in range(start_idx.shape[0])]).to(pred.device)
+            
+            # print(coords[idx,rand_idx,1].shape,  coords[:,None,:,1,:].shape)
+            dist = (coords[idx,rand_idx,1][:,None,None] - coords[:,None,:,1,:]).norm(dim=-1)[:,0]
+            rel_idx = rand_idx[:,None] - torch.arange(coords.shape[1], device=coords.device)[None]
+            select_mask = (~unknown_mask[:,:,0]* attention_mask*(rel_idx>10))
+            dist = dist*select_mask + 10000*(1-select_mask)
+            dist = dist.min(dim=1)[0]
+            
         return pred, vectors, dist
 
 

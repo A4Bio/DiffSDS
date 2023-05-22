@@ -104,6 +104,7 @@ class DiffSDS(Base_method):
         train_loss = LogLoss.val.item()/LogLoss.total
         phi, psi, omega, tau, CA_C_1N, C_1N_1CA =  LogAngle.val/LogAngle.total 
         train_overlap = LogOverlap.val.item()/LogOverlap.total 
+        train_len = LogLen.val.item()/LogLen.total 
         
         return {"train_loss": train_loss,
                 "train_phi": phi,
@@ -113,7 +114,8 @@ class DiffSDS(Base_method):
                 "train_tau": tau,
                 "train_CA_C_1N": CA_C_1N,
                 "train_C_1N_1CA": C_1N_1CA,
-                "train_overlap": train_overlap}
+                "train_overlap": train_overlap,
+                "train_len": train_len}
     
 
     def valid_one_epoch(self, valid_loader):
@@ -140,6 +142,7 @@ class DiffSDS(Base_method):
         valid_loss = LogLoss.val.item()/LogLoss.total
         phi, psi, omega, tau, CA_C_1N, C_1N_1CA =  LogAngle.val/LogAngle.total 
         valid_overlap = LogOverlap.val.item()/LogOverlap.total 
+        valid_len = LogLen.val.item()/LogLen.total 
         return {"valid_loss": valid_loss,
                 "valid_phi": phi,
                 "valid_psi": psi,
@@ -148,7 +151,8 @@ class DiffSDS(Base_method):
                 "valid_tau": tau,
                 "valid_CA_C_1N": CA_C_1N,
                 "valid_C_1N_1CA": C_1N_1CA,
-                "valid_overlap": valid_overlap}
+                "valid_overlap": valid_overlap,
+                "valid_len":valid_len}
 
     def test_one_epoch(self, test_loader):
         self.model.eval()

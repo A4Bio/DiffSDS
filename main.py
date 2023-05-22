@@ -40,7 +40,7 @@ method_maps = {
 
 # CUDA_VISIBLE_DEVICES="0" python -m torch.distributed.launch --nproc_per_node 1 --master_port 1235 main.py --ex_name ablation/full_feat
 
-# CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7" torchrun --nproc_per_node 8 main.py --ex_name recheck_diffsds_final --method DiffSDS
+# CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7" torchrun --nproc_per_node 8 main.py --ex_name recheck_diffsds3 --method DiffSDS
 
 # CUDA_VISIBLE_DEVICES="0" python -m torch.distributed.launch --nproc_per_node 1 --master_port 1234 main.py --ex_name dualspace_baseline
 # CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7" python -m torch.distributed.launch --nproc_per_node 8 main.py --ex_name DiffSDS_bacth1024_epoch100k
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     
     print(config) 
     
-    # os.environ["WANDB_DISABLED"] = "true"
+    os.environ["WANDB_DISABLED"] = "true"
     os.environ["WANDB_API_KEY"] = "ddb1831ecbd2bf95c3323502ae17df6e1df44ec0"
     wandb.init(project="ProteinBinder", entity="gaozhangyang", config=config, name=args.ex_name, group=args.ex_name)
 

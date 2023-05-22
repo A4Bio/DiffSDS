@@ -11,7 +11,7 @@ def create_parser():
     parser.add_argument('--use_gpu', default=True, type=bool)
     parser.add_argument('--gpu', default=2, type=int)
     parser.add_argument('--seed', default=111, type=int)
-    parser.add_argument("--local-rank", default=-1, type=int, help="Used for DDP, local rank means the process number of each machine")
+    parser.add_argument("--local_rank", default=-1, type=int, help="Used for DDP, local rank means the process number of each machine")
     
     # dataset parameters
     parser.add_argument('--batch_size', default=1024, type=int)
